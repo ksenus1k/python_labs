@@ -21,7 +21,7 @@ def flatten(mat: list[list | tuple]) -> list:
     res=[]
     for x in mat:
         if not isinstance(x,(list,tuple)):
-            raise TypeError(f"строка не строка строк матрицы")
+            return TypeError
         res.extend(x)
     return res
 print(flatten([[1, 2], [3, 4]]))
