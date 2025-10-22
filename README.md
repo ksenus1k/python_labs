@@ -235,7 +235,7 @@ print(count_freq(["bb","aa","bb","aa","cc"]))
 print(top_n(count_freq(["a","b","a","c","b","a"])))
 print(top_n(count_freq(["bb","aa","bb","aa","cc"])))
 ```
-![a](./images/lab03/1.png)
+![a](./images/lab03/01.png)
 
 ## Задание 2
 ```
@@ -281,6 +281,6 @@ print("Топ-5:")
 for y in top:
     print(y[0] + ': ' + str(y[1]))
 ```
-![b](./images/lab03/2.png)
+![b](./images/lab03/02.png)
 
 
