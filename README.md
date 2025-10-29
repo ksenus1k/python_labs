@@ -270,7 +270,7 @@ def top_n(freq: dict[str, int], n: int = 5) -> list[tuple[str, int]]:
     for neg_count, word in s:
         result.append((word,-neg_count))
     return result[:n]
-a = "Привет, мир! Привет!!!"
+a = str(input())
 nt=normalize(a)
 allwords=tokenize(nt)
 uw=count_freq(allwords)
