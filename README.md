@@ -283,4 +283,87 @@ for y in top:
 ```
 ![b](./images/lab03/02.png)
 
+# Лабораторная работа №4
 
+## Задание 1
+```
+from pathlib import Path
+import csv
+import os
+from typing import Iterable, Sequence
+
+def read_text(path: str | Path, encoding: str = "utf-8") -> str:                                                             
+    try:
+        p = Path(path) 
+        return p.read_text(encoding=encoding)
+    except FileNotFoundError:
+        return "Такого файла не существует"
+    except UnicodeDecodeError:
+        return "Не удалось изменить кодировку"
+
+def write_csv(rows: Iterable[Sequence], path: str | Path,
+              header: tuple[str, ...] | None = None) -> None:                                                
+    p = Path(path)
+    rows = list(rows)
+    with p.open("w", newline="", encoding="utf-8") as f:                                                     
+        file_c = csv.writer(f)
+        if header is not None and rows == []:
+            file_c.writerow(('a','b'))
+        if header is not None:
+            file_c.writerow(header)
+        if rows:
+            const = len(rows[0])
+            for r in rows:
+                if len(r) != const:
+                    raise ValueError("Все строки должны иметь одинаковую длину")
+            for r in rows:
+                file_c.writerow(r)
+
+def ensure_parent_dir(path: str | Path) -> None:                                            
+    p = Path(path)
+    parent_dir = p.parent
+    parent_dir.mkdir(parents=True, exist_ok=True) 
+                                                
+print(read_text(r"C:\Users\ksen\Desktop\python_labs\src\data\input.txt"))
+write_csv([("world","count"),("test",3)], r"C:\Users\ksen\Desktop\python_labs\src\data\check.csv", header=None)  
+```
+![a](./images/lab04/a.png)
+![a](./images/lab04/input.png)
+![a](./images/lab04/check.png)
+
+## Задание 2
+```
+from io_txt_csv import read_text, write_csv, ensure_parent_dir
+import sys
+from pathlib import Path
+
+sys.path.append(r"C:\Users\ksen\Desktop\python_labs\src\lib")
+
+from text import normalize, tokenize, count_freq, top_n
+
+def exist_path(path_f: str):
+    return Path(path_f).exists()
+
+def main(file: str, encoding: str = 'utf-8'): 
+    if not exist_path(file):
+        raise FileNotFoundError 
+    
+    file_path = Path(file)
+    text = read_text(file, encoding=encoding)
+    norm = normalize(text) 
+    tokens = tokenize(norm)
+    freq_dict = count_freq(tokens)
+    top = top_n(freq_dict, 5)
+    top_sort = sorted(top, key=lambda x: (x[1], x[0]), reverse=True)
+    report_path = file_path.parent / 'report.csv'
+    write_csv(top_sort, report_path, header=('word', 'count'))  
+    print(f'Всего слов: {len(tokens)}')
+    print(f'Уникальных слов: {len(freq_dict)}')
+    print('Топ-5:')
+    for cursor in top_sort:
+        print(f'{cursor[0]}: {cursor[-1]}')
+main(r"C:\Users\ksen\Desktop\python_labs\src\data\input.txt")
+```
+![a](./images/lab04/b.png)
+![a](./images/lab04/input.png)
+![a](./images/lab04/report.png)
