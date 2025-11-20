@@ -444,3 +444,108 @@ csv_to_xlsx('C:/Users/ksen/Desktop/python_labs/src/data/samples/people.csv', 'C:
 ```
 ![a](./images/lab05/5.png)
 ![a](./images/lab05/6.png)
+
+# Лабораторная работа №6
+
+## Задание 1
+
+```
+import argparse
+import sys
+import os
+from pathlib import Path
+
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
+
+from src.lib.text import tokenize, count_freq, top_n
+
+def main():
+    parser = argparse.ArgumentParser(description="CLI‑утилиты лабораторной №6")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    cat_parser = subparsers.add_parser("cat", help="Вывести содержимое файла")
+    cat_parser.add_argument("--input", required=True, help="Путь к входному файлу")
+    cat_parser.add_argument("-n", "--number", action="store_true", help="Нумеровать строки")
+
+    stats_parser = subparsers.add_parser("stats", help="Частоты слов")
+    stats_parser.add_argument("--input", required=True, help="Путь к текстовому файлу")
+    stats_parser.add_argument("--top", type=int, default=5, help="Количество наиболее частых слов")
+
+    args = parser.parse_args()
+    filepath = Path(args.input)
+
+    if not filepath.exists():
+        raise FileNotFoundError(f"Файл не найден: {filepath}")
+
+    if args.command == "cat":
+        """ Реализация команды cat """
+        with filepath.open("r", encoding="utf-8") as f:
+            for line_number, line in enumerate(f, 1):
+                line = line.rstrip("\n")
+                if args.number:
+                    print(f"{line_number}: {line}")
+                else:
+                    print(line)
+                    
+    elif args.command == "stats":
+        """ Реализация команды stats """
+        with filepath.open("r", encoding="utf-8") as file:
+            text = file.read()
+
+        tokens = tokenize(text=text)
+        freq = count_freq(tokens=tokens)
+        top_words = top_n(freq=freq, n=args.top)
+        
+        print(f"Топ-{args.top} самых частых слов:")
+        for word, count in top_words:
+            print(f"{word} - {count}")
+
+if __name__ == "__main__":
+    main()
+```
+![a](./images/lab06/1.png)
+![a](./images/lab06/2.png)
+
+## Задание 2
+```
+import argparse
+from pathlib import Path
+from src.lab05.JSON_CSV import json_to_csv, csv_to_json
+from src.lab05.CSV_XLSX import csv_to_xlsx  
+
+def main():
+    parser = argparse.ArgumentParser(description="Конвертер данных между форматами")
+    subparsers = parser.add_subparsers(dest="command", help="Доступные команды конвертации")
+
+    # JSON → CSV
+    json_to_csv_parser = subparsers.add_parser("json_to_csv", help="Конвертировать JSON в CSV")
+    json_to_csv_parser.add_argument("--in", dest="input", required=True, help="Входной JSON файл")
+    json_to_csv_parser.add_argument("--out", dest="output", required=True, help="Выходной CSV файл")
+
+    # CSV → JSON
+    csv_to_json_parser = subparsers.add_parser("csv_to_json", help="Конвертировать CSV в JSON")
+    csv_to_json_parser.add_argument("--in", dest="input", required=True, help="Входной CSV файл")
+    csv_to_json_parser.add_argument("--out", dest="output", required=True, help="Выходной JSON файл")
+
+    # CSV → XLSX
+    csv_to_xlsx_parser = subparsers.add_parser("csv_to_xlsx", help="Конвертировать CSV в XLSX")
+    csv_to_xlsx_parser.add_argument("--in", dest="input", required=True, help="Входной CSV файл")
+    csv_to_xlsx_parser.add_argument("--out", dest="output", required=True, help="Выходной XLSX файл")
+
+    args = parser.parse_args()
+
+    if args.command == "json_to_csv":
+        json_to_csv(json_path=args.input, csv_path=args.output)
+
+    elif args.command == "csv_to_json":
+        csv_to_json(csv_path=args.input, json_path=args.output)
+
+    elif args.command == "csv_to_xlsx":
+        csv_to_xlsx(csv_path=args.input, xlsx_path=args.output)
+
+if __name__ == "__main__":
+    main()
+```
+![a](./images/lab06/3.png)
+![a](./images/lab06/4.png)
