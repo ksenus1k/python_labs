@@ -545,3 +545,161 @@ if __name__ == "__main__":
 ```
 ![a](./images/lab06/3.png)
 ![a](./images/lab06/4.png)
+
+# Лабораторная работа №7
+
+## Задание 1
+
+```
+import sys
+import pytest
+
+sys.path.append('C:/Users/ksen/Desktop/python_labs')
+
+from src.lib.text import normalize, tokenize, count_freq, top_n
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        ("ПрИвЕт\nМИр\t", "привет мир"),
+        ("ёжик, Ёлка", "ежик, елка"),
+        ("Hello\r\nWorld", "hello world"),
+        ("  двойные   пробелы  ", "двойные пробелы"),
+        ("", ""),
+        ("   ", ""),
+    ],
+)
+def test_normalize(source, expected):
+    assert normalize(source) == expected
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("привет мир", ["привет", "мир"]),
+        ("hello world test", ["hello", "world", "test"]),
+        ("", []),
+        ("   ", []),
+        ("знаки, препинания! тест.", ["знаки", "препинания", "тест"]),
+    ],
+)
+def test_tokenize(text, expected):
+    assert tokenize(text) == expected
+
+
+def test_count_freq_basic():
+    tokens = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    result = count_freq(tokens)
+    expected = {"apple": 3, "banana": 2, "cherry": 1}
+    assert result == expected
+
+
+def test_count_freq_empty():
+    assert count_freq([]) == {}
+
+
+def test_top_n_basic():
+    freq = {"apple": 5, "banana": 3, "cherry": 7, "date": 1}
+    result = top_n(freq, 2)
+    expected = [("cherry", 7), ("apple", 5)]
+    assert result == expected
+
+
+def test_top_n_tie_breaker():
+    freq = {"banana": 3, "apple": 3, "cherry": 3}
+    result = top_n(freq, 3)
+    expected = [("apple", 3), ("banana", 3), ("cherry", 3)]
+    assert result == expected
+
+
+def test_top_n_empty():
+    assert top_n({}, 5) == []
+
+
+def test_full_pipeline():
+    text = "Привет мир! Привет всем. Мир прекрасен."
+    normalized = normalize(text)
+    tokens = tokenize(normalized)
+    freq = count_freq(tokens)
+    top_words = top_n(freq, 2)
+
+    assert normalized == "привет мир! привет всем. мир прекрасен."
+    assert tokens == [
+        "привет",
+        "мир",
+        "привет",
+        "всем",
+        "мир",
+        "прекрасен",
+    ]
+    assert freq == {"привет": 2, "мир": 2, "всем": 1, "прекрасен": 1}
+    assert top_words == [("мир", 2), ("привет", 2)]
+```
+![a](./images/lab07/1.png)
+
+## Задание 2
+```
+import sys
+import os
+
+os.chdir("C:/Users/ksen/Desktop/python_labs")
+sys.path.insert(0, os.getcwd())
+
+import pytest
+import csv
+import json
+from pathlib import Path
+from src.lab05.JSON_CSV import json_to_csv, csv_to_json
+
+
+def test_json_to_csv_roundtrip(tmp_path: Path):
+    src = tmp_path / "people.json"
+    dst = tmp_path / "people.csv"
+    data = [
+        {"name": "Alice", "age": 22},
+        {"name": "Bob", "age": 25},
+    ]
+    src.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_to_csv(str(src), str(dst))
+    with dst.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 2
+    assert {"name", "age"} <= set(rows[0].keys())
+
+
+def test_csv_to_json_roundtrip(tmp_path: Path):
+    src = tmp_path / "people.csv"
+    dst = tmp_path / "people.json"
+    data = [
+        {"name": "Alice", "age": "22"},
+        {"name": "Bob", "age": "25"},
+    ]
+    with open(src, "w", newline="", encoding="utf-8") as f:
+        fieldnames = list(data[0].keys())
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+    csv_to_json(str(src), str(dst))
+    with dst.open(encoding="utf-8") as f:
+        rows = json.load(f)
+    assert len(rows) == 2
+
+
+@pytest.mark.parametrize(
+    "function, input_file, error",
+    [
+        (json_to_csv, "people.json", ValueError),
+    ],
+)
+def test_error_handling(function, input_file, error, tmp_path: Path):
+    file_path = tmp_path / input_file
+    file_path.write_text("Error???", encoding="utf-8")
+    dst = tmp_path / "people.csv"
+    f = json_to_csv if function is json_to_csv else csv_to_json
+    with pytest.raises(error):
+        f(str(file_path), str(dst))
+```
+![a](./images/lab07/2.png)
+
+## Black
+![a](./images/lab07/3.png)
