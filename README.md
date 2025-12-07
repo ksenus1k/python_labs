@@ -703,3 +703,89 @@ def test_error_handling(function, input_file, error, tmp_path: Path):
 
 ## Black
 ![a](./images/lab07/3.png)
+
+# Лабораторная работа №8
+
+## Задание 1
+```
+from datetime import datetime, date
+from dataclasses import dataclass
+@dataclass
+class Student:
+    fio: str
+    birthdate: str
+    group: str
+    gpa: float
+
+    def __post_init__(self):
+        try:
+            datetime.strptime(self.birthdate, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError(f"Неверный формат даты: {self.birthdate}. Ожидается YYYY-MM-DD")
+
+        if not (0 <= self.gpa <= 5):
+            raise ValueError(f"GPA должен быть в диапазоне 0..5, получено: {self.gpa}")
+
+    def age(self) -> int:
+        birth = datetime.strptime(self.birthdate, "%Y-%m-%d").date()
+        today = date.today()
+        years = today.year - birth.year
+        if (today.month, today.day) < (birth.month, birth.day):
+            years -= 1
+        return years
+    def to_dict(self) -> dict:
+        return {
+            "fio": self.fio,
+            "birthdate": self.birthdate,
+            "group": self.group,
+            "gpa": self.gpa
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(
+            fio=d["fio"],
+            birthdate=d["birthdate"],
+            group=d["group"],
+            gpa=d["gpa"]
+        )
+
+    def __str__(self):
+        return f"{self.fio} ({self.group}), возраст: {self.age()}, GPA: {self.gpa}"
+```
+## Задание 2
+```
+import json
+from pathlib import Path
+
+from models import Student
+
+DATA_DIR = Path(__file__).parent.parent
+students = [
+    Student(fio="Иванов Иван Иванович", birthdate="2000-05-15", group="БИВТ-1", gpa=4.5),
+    Student(fio="Петрова Анна Сергеевна", birthdate="2001-03-20", group="БИВТ-2", gpa=4.8),
+]
+def students_to_json(students, path: str | Path) -> None:
+    output_path = Path(path)
+    data = [student.to_dict() for student in students]
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+students_to_json(students, "src/data/lab08/students_output.json")
+
+
+def students_from_json(path: str | Path):
+    input_path = Path(path)
+    if not input_path.exists():
+        raise FileNotFoundError(f"Файл не найден: {input_path}")
+    with input_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, list):
+        raise ValueError("Ожидается список студентов в JSON")
+    return [Student.from_dict(item) for item in data]
+students = students_from_json('src/data/lab08/students_output.json')
+for student in students:
+    print(student)
+```
+![a](./images/lab08/1.png)
+![a](./images/lab08/2.png)
+![a](./images/lab08/3.png)
